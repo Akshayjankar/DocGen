@@ -21,6 +21,7 @@ _CODE_FENCE_OPEN = re.compile(r"^```(\w+)?\s*$")
 _CODE_FENCE_CLOSE = re.compile(r"^```\s*$")
 _TABLE_ROW = re.compile(r"^\|.+\|$")
 _TABLE_SEP = re.compile(r"^\|[\s|:-]+\|$")
+_HR = re.compile(r"^(-{3,}|\*{3,}|_{3,})\s*$")
 _SHELL_LANGS = {"bash", "sh", "shell", "zsh", "powershell", "pwsh", "cmd"}
 
 
@@ -130,6 +131,23 @@ class RulesStructurer:
                 )
                 covered.append((line_start, end_off))
                 i = j
+                continue
+
+            # Horizontal rule (--- / *** / ___)
+            if _HR.match(stripped):
+                blocks.append(
+                    Block(
+                        id=uuid4().hex[:12],
+                        type="divider",
+                        span=SourceSpan(
+                            start=line_start + line.find(stripped),
+                            end=line_start + line.find(stripped) + len(stripped),
+                        ),
+                        origin="source",
+                    )
+                )
+                covered.append((line_start, line_start + len(line)))
+                i += 1
                 continue
 
             # Heading
@@ -323,6 +341,7 @@ def _is_structural(stripped: str) -> bool:
         or _CALLOUT.match(stripped)
         or _CODE_FENCE_OPEN.match(stripped)
         or _TABLE_ROW.match(stripped)
+        or _HR.match(stripped)
         or (len(stripped) < 80 and stripped.isupper() and any(c.isalpha() for c in stripped))
     )
 

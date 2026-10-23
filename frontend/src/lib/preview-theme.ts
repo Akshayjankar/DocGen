@@ -3,6 +3,23 @@ import type { LogoSet, Theme } from "@/types/api";
 
 export const DEFAULT_BRAND = "#1F6F5B";
 
+/** Patch palette + border so Brand & checks primary wins over logo extraction. */
+export function applyBrandPrimary(theme: Theme, brandPrimary: string): Theme {
+  const primary = brandPrimary.toUpperCase();
+  const tint = deriveBrandTint(primary);
+  return {
+    ...theme,
+    palette: {
+      ...theme.palette,
+      primary,
+      primary_dark: tint.primaryDark,
+      primary_tint: tint.primaryTint,
+    },
+    border: { ...theme.border, color: primary },
+    source: "manual",
+  };
+}
+
 export interface PreviewThemeInput {
   /** Theme chosen in Studio (logo extraction / brand kit). */
   studioTheme: Theme | null;
@@ -55,17 +72,7 @@ export function resolvePreviewTheme(input: PreviewThemeInput): Theme | undefined
   };
 
   if (base && base.palette.primary.toUpperCase() !== primary) {
-    theme = {
-      ...base,
-      palette: {
-        ...base.palette,
-        primary,
-        primary_dark: deriveBrandTint(primary).primaryDark,
-        primary_tint: deriveBrandTint(primary).primaryTint,
-      },
-      border: { ...base.border, color: primary },
-      source: "manual",
-    };
+    theme = applyBrandPrimary(base, primary);
   }
 
   const logos: LogoSet = {

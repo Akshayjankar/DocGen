@@ -9,6 +9,7 @@ import pymupdf
 from app.models.blocks import Block
 from app.models.document import DocumentMeta, RenderOptions
 from app.models.theme import LogoSet, Theme
+from app.services.renderer.inline_md import parse_inline, strip_inline_markers
 from app.services.renderer.layout import LayoutPlan, mm_to_pt, plan_layout
 from app.services.theme_engine.logo import read_processed_bytes
 
@@ -248,6 +249,15 @@ class _PdfBuilder:
         if self.y + need > self.max_y:
             self.new_page()
 
+    def _run_font(self, *, bold: bool = False, italic: bool = False, code: bool = False) -> str:
+        if code:
+            return "cour"
+        if bold:
+            return self._font_bold
+        if italic:
+            return "heit"
+        return self._font_reg
+
     def _textbox(
         self,
         text: str,
@@ -259,15 +269,26 @@ class _PdfBuilder:
         indent: float = 0,
         max_width: float | None = None,
         space_after: float = 6,
+        rich: bool = True,
     ) -> float:
         assert self.page is not None
         if not text.strip():
             return 0.0
         # Never emit soft hyphens
         text = text.replace("\u00ad", "").replace("\u2011", "-")
+        if rich and fontname is None and align == 0:
+            return self._rich_textbox(
+                text,
+                fontsize=fontsize,
+                color=color,
+                indent=indent,
+                max_width=max_width,
+                space_after=space_after,
+            )
         fontname = fontname or self._font_reg
+        plain = strip_inline_markers(text) if rich else text
         width = (max_width or CONTENT_W) - indent
-        est_lines = max(1, int(len(text) / max(20, width / (fontsize * 0.5))) + 1)
+        est_lines = max(1, int(len(plain) / max(20, width / (fontsize * 0.5))) + 1)
         height = est_lines * (fontsize * 1.45) + fontsize
         self.ensure(min(height, 200) + 2)
         rect = pymupdf.Rect(
@@ -278,7 +299,7 @@ class _PdfBuilder:
         )
         unused = self.page.insert_textbox(
             rect,
-            text,
+            plain,
             fontsize=fontsize,
             fontname=fontname,
             color=color,
@@ -288,17 +309,93 @@ class _PdfBuilder:
         self.y += max(used, fontsize + 2) + space_after
         return used
 
+    def _rich_textbox(
+        self,
+        text: str,
+        *,
+        fontsize: float,
+        color: tuple[float, float, float],
+        indent: float = 0,
+        max_width: float | None = None,
+        space_after: float = 6,
+    ) -> float:
+        """Word-wrap Markdown inline runs (bold/italic/code); markers omitted."""
+        assert self.page is not None
+        from app.services.renderer.inline_md import InlineRun
+
+        width = (max_width or CONTENT_W) - indent
+        line_h = fontsize * 1.45
+        x0 = MARGIN_X + indent
+        x_max = x0 + width
+        y0 = self.y
+        x = x0
+        drew = False
+
+        def new_line() -> None:
+            nonlocal x
+            self.y += line_h
+            self.ensure(line_h + 2)
+            x = x0
+
+        def tokens_of(s: str) -> list[str]:
+            out: list[str] = []
+            buf = ""
+            for ch in s:
+                if ch == " ":
+                    if buf:
+                        out.append(buf)
+                        buf = ""
+                    out.append(" ")
+                else:
+                    buf += ch
+            if buf:
+                out.append(buf)
+            return out
+
+        self.ensure(line_h + 2)
+        soft_lines = text.replace("\r\n", "\n").split("\n")
+        for li, soft in enumerate(soft_lines):
+            if li > 0:
+                new_line()
+            runs: list[InlineRun] = parse_inline(soft)
+            if not runs and soft == "":
+                continue
+            if not runs:
+                runs = [InlineRun(soft)]
+            for ir in runs:
+                font = self._run_font(bold=ir.bold, italic=ir.italic, code=ir.code)
+                for tok in tokens_of(ir.text):
+                    tw = self._text_width(tok, fontsize=fontsize, bold=ir.bold or ir.code)
+                    if tok != " " and x > x0 and x + tw > x_max:
+                        new_line()
+                    if tok == " " and x <= x0 + 0.01:
+                        continue
+                    self.page.insert_text(
+                        pymupdf.Point(x, self.y + fontsize),
+                        tok,
+                        fontsize=fontsize,
+                        fontname=font,
+                        color=color,
+                    )
+                    x += tw
+                    drew = True
+        used = max(fontsize + 2, (self.y - y0) + (fontsize if drew else 0))
+        self.y = y0 + used + space_after
+        return used
+
     def _section_heading(self, text: str, *, size: float = 20, level: int = 1) -> None:
         before = {1: 20, 2: 14, 3: 10}.get(level, 10)
         after = {1: 6, 2: 4, 3: 3}.get(level, 4)
         self.y += before * 0.35
         self.ensure(size + 28)
+        clean = strip_inline_markers(text)
         self._textbox(
-            text,
+            clean,
             fontsize=size,
             color=self.brand_dark,
             fontname=self._font_bold,
             space_after=0,
+            rich=False,
         )
         if level == 1:
             assert self.page is not None
@@ -690,7 +787,9 @@ class _PdfBuilder:
 
             if block.type == "heading":
                 level = min(max(block.level or 1, 1), 3)
-                text = block.resolved_text(source).replace("\u00ad", "")
+                text = strip_inline_markers(
+                    block.resolved_text(source).replace("\u00ad", "")
+                )
                 # Skip invented title H1
                 if level == 1 and text.strip().lower() == title_l:
                     continue
@@ -728,7 +827,7 @@ class _PdfBuilder:
                 continue
 
             if block.type in ("callout_info", "callout_warning", "callout_success"):
-                body = block.resolved_text(source)
+                body = strip_inline_markers(block.resolved_text(source))
                 label = (block.label or block.type.replace("callout_", "")).upper()
                 accent = {
                     "callout_info": _rgb(self.theme.palette.info),

@@ -3,11 +3,23 @@
 import { useThemeStore } from "@/lib/theme-store";
 import { useStudioStore } from "@/lib/studio-store";
 import { normalizeHex } from "@/lib/color";
+import { applyBrandPrimary } from "@/lib/preview-theme";
 
 export function ThemeEditor() {
   const brandPrimary = useThemeStore((s) => s.brandPrimary);
   const setBrandPrimary = useThemeStore((s) => s.setBrandPrimary);
   const theme = useStudioStore((s) => s.theme);
+  const setTheme = useStudioStore((s) => s.setTheme);
+
+  const onPrimary = (raw: string) => {
+    try {
+      const hex = normalizeHex(raw);
+      setBrandPrimary(hex);
+      if (theme) setTheme(applyBrandPrimary(theme, hex));
+    } catch {
+      /* wait for valid hex */
+    }
+  };
 
   return (
     <div className="space-y-3 rounded-[var(--radius-md)] border border-border bg-surface p-3">
@@ -20,26 +32,14 @@ export function ThemeEditor() {
           <input
             type="color"
             value={brandPrimary}
-            onChange={(e) => {
-              try {
-                setBrandPrimary(normalizeHex(e.target.value));
-              } catch {
-                /* ignore */
-              }
-            }}
+            onChange={(e) => onPrimary(e.target.value)}
             className="size-8 cursor-pointer rounded border border-border bg-transparent"
             aria-label="Brand primary color"
           />
           <input
             type="text"
             value={brandPrimary}
-            onChange={(e) => {
-              try {
-                setBrandPrimary(normalizeHex(e.target.value));
-              } catch {
-                /* wait for valid hex */
-              }
-            }}
+            onChange={(e) => onPrimary(e.target.value)}
             className="w-[7.5rem] rounded border border-border bg-bg px-2 py-1 font-mono text-xs"
           />
         </span>

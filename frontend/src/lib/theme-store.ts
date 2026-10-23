@@ -34,7 +34,22 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 
   setBrandPrimary: (hex) => {
     const primary = hex.toUpperCase() as Hex;
-    set({ brandPrimary: primary });
+    const tint = deriveBrandTint(primary);
+    const prev = get().theme;
+    const theme = prev
+      ? {
+          ...prev,
+          palette: {
+            ...prev.palette,
+            primary,
+            primary_dark: tint.primaryDark,
+            primary_tint: tint.primaryTint,
+          },
+          border: { ...prev.border, color: primary },
+          source: "manual" as const,
+        }
+      : null;
+    set({ brandPrimary: primary, ...(theme ? { theme } : {}) });
     applyVars(primary);
   },
 

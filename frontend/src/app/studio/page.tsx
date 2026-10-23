@@ -23,18 +23,21 @@ import { ThemeEditor } from "@/components/studio/ThemeEditor";
 import { useJobStream } from "@/hooks/useJobStream";
 import { createDocument, getJob } from "@/lib/api";
 import { announce } from "@/lib/a11y";
+import { deriveBrandTint } from "@/lib/color";
+import { resolvePreviewTheme } from "@/lib/preview-theme";
 import { useStudioStore } from "@/lib/studio-store";
 import { useThemeStore } from "@/lib/theme-store";
 import { cn } from "@/lib/cn";
 import type { LintItem, Mode, Theme } from "@/types/api";
 
 function buildFallbackTheme(primary: string): Theme {
+  const tint = deriveBrandTint(primary);
   return {
     name: "Studio theme",
     palette: {
       primary,
-      primary_dark: primary,
-      primary_tint: "#E4F2ED",
+      primary_dark: tint.primaryDark,
+      primary_tint: tint.primaryTint,
       secondary: "#2C3A36",
       accent: "#C45C26",
       text: "#1A1714",
@@ -153,6 +156,11 @@ export default function StudioPage() {
   const setJob = useStudioStore((s) => s.setJob);
   const brandPrimary = useThemeStore((s) => s.brandPrimary);
   const themeFromStore = useThemeStore((s) => s.theme);
+  const cornerPosition = useStudioStore((s) => s.cornerPosition);
+  const showCornerOnCover = useStudioStore((s) => s.showCornerOnCover);
+  const cornerAnchor = useStudioStore((s) => s.cornerAnchor);
+  const cornerPages = useStudioStore((s) => s.cornerPages);
+  const cornerHeightMm = useStudioStore((s) => s.cornerHeightMm);
   const [demoMode, setDemoMode] = useState(false);
   const [brandOpen, setBrandOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"write" | "paper" | "brand">("write");
@@ -353,8 +361,22 @@ export default function StudioPage() {
       status: "queued",
     });
     try {
+      // Same brand merge as live preview — Brand & checks primary must win over logo palette
       const activeTheme =
-        theme ?? themeFromStore ?? buildFallbackTheme(brandPrimary);
+        resolvePreviewTheme({
+          studioTheme: theme,
+          storeTheme: themeFromStore,
+          brandPrimary,
+          hasCover: !!logoFile,
+          flags: {
+            sameForBoth,
+            cornerPosition,
+            showCornerOnCover,
+            cornerAnchor,
+            cornerPages,
+            cornerHeightMm,
+          },
+        }) ?? buildFallbackTheme(brandPrimary);
       const job = await createDocument({
         text,
         doc_type: docType,
@@ -428,6 +450,11 @@ export default function StudioPage() {
     logoFile,
     cornerFile,
     sameForBoth,
+    cornerPosition,
+    showCornerOnCover,
+    cornerAnchor,
+    cornerPages,
+    cornerHeightMm,
     formatId,
     brandPrimary,
     setJob,

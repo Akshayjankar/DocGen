@@ -5,9 +5,11 @@ from __future__ import annotations
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, RGBColor
+from docx.text.paragraph import Paragraph
 
 from app.models.blocks import Block
 from app.models.theme import Theme
+from app.services.renderer.inline_md import parse_inline, strip_inline_markers
 from app.services.renderer.oxml import (
     add_seq_field,
     hex_to_word,
@@ -21,6 +23,25 @@ def _rgb(hex_color: str) -> RGBColor:
     return RGBColor(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
 
+def _add_md_runs(
+    para: Paragraph,
+    text: str,
+    *,
+    theme: Theme,
+    color: str,
+    size_pt: float = 10.5,
+    force_italic: bool = False,
+) -> None:
+    """Append runs with Markdown bold/italic/code resolved (markers omitted)."""
+    for ir in parse_inline(text):
+        run = para.add_run(ir.text)
+        run.font.name = theme.fonts.mono if ir.code else theme.fonts.body
+        run.font.size = Pt(size_pt)
+        run.font.color.rgb = _rgb(color)
+        run.font.bold = ir.bold
+        run.font.italic = ir.italic or force_italic
+
+
 def render_blocks(doc: Document, blocks: list[Block], source: str, theme: Theme) -> None:
     for block in blocks:
         _render_one(doc, block, source, theme)
@@ -32,7 +53,7 @@ def _render_one(doc: Document, block: Block, source: str, theme: Theme) -> None:
 
     if t == "heading":
         level = min(max(block.level or 1, 1), 3)
-        text = block.resolved_text(source)
+        text = strip_inline_markers(block.resolved_text(source))
         style_name = f"Docgen Heading {level}"
         try:
             para = doc.add_paragraph(text, style=style_name)
@@ -49,23 +70,18 @@ def _render_one(doc: Document, block: Block, source: str, theme: Theme) -> None:
             para = doc.add_paragraph()
         parts = text.replace("\r\n", "\n").split("\n")
         for i, part in enumerate(parts):
-            run = para.add_run(part)
-            run.font.name = theme.fonts.body
-            run.font.size = Pt(10.5)
-            run.font.color.rgb = _rgb(p.text)
+            _add_md_runs(para, part, theme=theme, color=p.text)
             if i < len(parts) - 1:
-                run.add_break()
+                para.add_run().add_break()
         para.paragraph_format.line_spacing = 1.45
         para.paragraph_format.space_after = Pt(6)
         return
 
     if t == "quote":
         text = block.resolved_text(source)
-        para = doc.add_paragraph(text)
+        para = doc.add_paragraph()
         para.paragraph_format.left_indent = Pt(18)
-        for run in para.runs:
-            run.font.italic = True
-            run.font.color.rgb = _rgb(p.muted)
+        _add_md_runs(para, text, theme=theme, color=p.muted, force_italic=True)
         return
 
     if t == "divider":
@@ -81,10 +97,8 @@ def _render_one(doc: Document, block: Block, source: str, theme: Theme) -> None:
         items = block.resolved_items(source)
         style = "List Number" if t == "steps" else "List Bullet"
         for item in items:
-            para = doc.add_paragraph(item, style=style)
-            for run in para.runs:
-                run.font.name = theme.fonts.body
-                run.font.size = Pt(10.5)
+            para = doc.add_paragraph(style=style)
+            _add_md_runs(para, item, theme=theme, color=p.text)
             para.paragraph_format.line_spacing = 1.45
         return
 
@@ -175,9 +189,7 @@ def _render_callout(doc: Document, block: Block, source: str, theme: Theme) -> N
     label_run.font.bold = True
     label_run.font.size = Pt(9)
     label_run.font.color.rgb = _rgb(accent)
-    body_run = cell.paragraphs[0].add_run(text)
-    body_run.font.size = Pt(10)
-    body_run.font.name = theme.fonts.body
+    _add_md_runs(cell.paragraphs[0], text, theme=theme, color=p.text, size_pt=10)
     doc.add_paragraph()
 
 
