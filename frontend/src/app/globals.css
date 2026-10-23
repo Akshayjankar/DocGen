@@ -156,7 +156,55 @@ body {
       180deg,
       color-mix(in srgb, var(--surface) 40%, transparent),
       transparent 40%
-    );
+    ),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  background-attachment: fixed, fixed, fixed, scroll;
+}
+
+/* Studio / surface panes — soft lift, not card clutter */
+.panel {
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent),
+    0 12px 40px -28px color-mix(in srgb, var(--ink) 35%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.panel-inset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent);
+}
+
+[data-theme="dark"] .panel {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 4%, transparent),
+    0 16px 48px -30px rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .panel-inset {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+}
+
+.ink-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--brand) 55%, var(--border)),
+    transparent
+  );
+}
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brand);
 }
 
 @keyframes ambient-glow-drift {
@@ -174,6 +222,26 @@ body {
 
 .animate-ambient-glow-drift {
   animation: ambient-glow-drift 70s ease-in-out infinite;
+}
+
+@keyframes press-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.press-bar-active {
+  background-image: linear-gradient(
+    90deg,
+    var(--brand) 0%,
+    color-mix(in srgb, var(--brand) 70%, white) 45%,
+    var(--brand) 90%
+  );
+  background-size: 200% 100%;
+  animation: press-shimmer 1.4s ease-in-out infinite;
 }
 
 [data-theme="dark"] .paper-atmosphere {

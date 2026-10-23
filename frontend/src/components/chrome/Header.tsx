@@ -26,54 +26,63 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link
           href="/"
-          className="group flex items-baseline gap-2"
+          className="group flex items-center gap-2.5"
           aria-label="Docgen home"
         >
-          <span className="font-display text-lg font-semibold tracking-tight text-fg">
-            Docgen
-          </span>
-          <span className="hidden font-serif text-sm italic text-fg-muted sm:inline">
-            The Chroma Press
+          <span
+            aria-hidden
+            className="h-6 w-1 rounded-full bg-brand shadow-[0_0_12px_color-mix(in_srgb,var(--brand)_45%,transparent)] transition-transform group-hover:scale-y-110"
+          />
+          <span className="flex items-baseline gap-2">
+            <span className="font-display text-lg font-semibold tracking-tight text-fg">
+              Docgen
+            </span>
+            <span className="hidden font-serif text-sm italic text-fg-muted sm:inline">
+              The Chroma Press
+            </span>
           </span>
         </Link>
 
-        {!studio ? (
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-            {nav.map((item) => {
-              const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "rounded-[var(--radius-sm)] px-3 py-1.5 text-sm transition-colors",
-                    active
-                      ? "bg-brand-tint text-brand-dark font-medium"
-                      : "text-fg-muted hover:text-fg",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        ) : (
-          <p className="hidden text-sm text-fg-muted sm:block">
-            Three-pane press · Format-only by default
-          </p>
-        )}
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+          {nav.map((item) => {
+            const active =
+              pathname === item.href || pathname?.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "rounded-[var(--radius-sm)] px-3 py-1.5 text-sm transition-colors",
+                  active
+                    ? "bg-brand-tint font-medium text-brand-dark"
+                    : "text-fg-muted hover:text-fg",
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
         <div className="flex items-center gap-2">
-          <kbd className="hidden items-center gap-1 rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px] text-fg-muted sm:inline-flex">
-            <Command size={10} />K
-          </kbd>
+          {studio ? (
+            <p className="mr-1 hidden text-xs text-fg-muted lg:block">
+              Format-only · wording locked
+            </p>
+          ) : (
+            <kbd className="hidden items-center gap-1 rounded border border-border bg-surface px-1.5 py-0.5 font-mono text-[10px] text-fg-muted sm:inline-flex">
+              <Command size={10} />K
+            </kbd>
+          )}
           <ThemeToggle />
-          <Link
-            href="/studio"
-            className="inline-flex h-9 items-center rounded-[var(--radius-md)] bg-brand px-3 text-sm font-medium text-white hover:bg-brand-dark"
-          >
-            Open Studio
-          </Link>
+          {!studio ? (
+            <Link
+              href="/studio"
+              className="inline-flex h-9 items-center rounded-[var(--radius-md)] bg-brand px-3 text-sm font-medium text-white shadow-[0_8px_20px_-12px_color-mix(in_srgb,var(--brand)_70%,transparent)] transition-colors hover:bg-brand-dark"
+            >
+              Open Studio
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>

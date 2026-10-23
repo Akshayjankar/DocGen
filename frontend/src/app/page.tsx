@@ -22,32 +22,32 @@ export default function HomePage() {
       {/* Hero — one composition: brand, headline, support, CTA, dominant visual */}
       <section className="relative overflow-hidden">
         <FloatingDocs className="hidden lg:block" />
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-20 lg:pb-28">
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 pt-16 pb-20 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pt-24 lg:pb-32">
           <motion.div
             variants={reduced ? undefined : staggerChildren}
             initial={reduced ? false : "hidden"}
             animate="show"
             className="relative z-10"
           >
-            <motion.p
-              variants={fadeUp}
-              className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand"
-            >
+            <motion.p variants={fadeUp} className="section-eyebrow">
               The Chroma Press
             </motion.p>
             <motion.h1
               variants={fadeUp}
-              className="mt-4 font-display text-5xl leading-[1.05] font-semibold tracking-tight text-fg sm:text-6xl lg:text-7xl"
+              className="mt-5 font-display text-5xl leading-[1.02] font-semibold tracking-tight text-fg sm:text-6xl lg:text-7xl"
             >
               Docgen
             </motion.h1>
+            <motion.div variants={fadeUp} className="mt-5 max-w-[12rem]">
+              <div className="ink-rule" />
+            </motion.div>
             <motion.p
               variants={fadeUp}
-              className="mt-5 max-w-md font-serif text-xl leading-snug text-fg-muted sm:text-2xl"
+              className="mt-6 max-w-md font-serif text-xl leading-snug text-fg-muted sm:text-2xl"
             >
               Rough notes in. On-brand SOPs out — wording locked.
             </motion.p>
-            <motion.div variants={fadeUp} className="mt-8 flex flex-wrap gap-3">
+            <motion.div variants={fadeUp} className="mt-9 flex flex-wrap gap-3">
               <Link href="/studio">
                 <Button size="lg" variant="primary">
                   Open Studio
@@ -68,24 +68,39 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
 
-          <div className="relative z-10">
+          <motion.div
+            className="relative z-10"
+            initial={reduced ? false : { opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
+          >
             <PaperStack />
-          </div>
+          </motion.div>
         </div>
       </section>
 
       <section
         id="chroma-drop"
-        className="border-y border-border/70 bg-surface/40 py-16 sm:py-20"
+        className="border-y border-border/70 bg-surface/50 py-16 sm:py-20"
       >
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <div className="mb-8 max-w-lg">
+            <p className="section-eyebrow">Step 01</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight">
+              Drop the brand
+            </h2>
+            <p className="mt-2 text-fg-muted">
+              We pull ink from your logo — then Studio keeps your wording untouched.
+            </p>
+          </div>
           <ChromaDrop onReady={() => router.push("/studio")} />
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
         <div className="mb-10 max-w-xl">
-          <h2 className="font-display text-3xl font-semibold tracking-tight">
+          <p className="section-eyebrow">Step 02</p>
+          <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight">
             Before the press / after the press
           </h2>
           <p className="mt-2 text-fg-muted">
@@ -95,10 +110,11 @@ export default function HomePage() {
         <BeforeAfterSlider />
       </section>
 
-      <section className="border-t border-border/70 bg-surface/30 py-20">
+      <section className="border-t border-border/70 bg-surface/35 py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 max-w-xl">
-            <h2 className="font-display text-3xl font-semibold tracking-tight">
+            <p className="section-eyebrow">Ink bench</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight">
               Sample brand inks
             </h2>
             <p className="mt-2 text-fg-muted">

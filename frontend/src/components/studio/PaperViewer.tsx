@@ -207,11 +207,18 @@ export function PaperViewer({ className }: { className?: string }) {
             </button>
           </div>
         ) : pages.length === 0 ? (
-          <div className="mx-auto flex h-[420px] max-w-[420px] flex-col justify-center rounded bg-surface shadow-sm">
-            <div className="mx-8 h-8 rounded bg-surface-2" />
-            <div className="mx-8 mt-6 h-3 rounded bg-surface-2" />
-            <div className="mx-8 mt-2 h-3 w-2/3 rounded bg-surface-2" />
-            <p className="mt-8 text-center text-xs text-fg-muted">
+          <div className="mx-auto flex h-[min(420px,55vh)] w-full max-w-[420px] flex-col justify-between rounded-sm border border-border/80 bg-[#fffdf8] p-8 shadow-[0_18px_50px_-28px_rgba(26,23,20,0.45)] dark:bg-surface">
+            <div>
+              <div className="h-2 w-16 rounded-full bg-brand/70" />
+              <div className="mt-8 space-y-2.5">
+                <div className="h-3 animate-pulse rounded bg-surface-2" />
+                <div className="h-3 w-[88%] animate-pulse rounded bg-surface-2" />
+                <div className="h-3 w-[72%] animate-pulse rounded bg-surface-2" />
+                <div className="mt-4 h-3 w-[92%] animate-pulse rounded bg-surface-2" />
+                <div className="h-3 w-[64%] animate-pulse rounded bg-surface-2" />
+              </div>
+            </div>
+            <p className="text-center font-serif text-sm italic text-fg-muted">
               {text.trim() ? "Rendering paper…" : "Start typing — paper appears here"}
             </p>
           </div>

@@ -30,27 +30,27 @@ export function PressProgress({
 }) {
   const idx = stageIndex(status);
   const failed = status === "failed";
+  const pct = Math.min(100, progress <= 1 ? progress * 100 : progress);
+  const running = !!status && status !== "done" && status !== "failed" && status !== "queued";
 
   return (
-    <div className="space-y-3 rounded-[var(--radius-md)] border border-border bg-surface p-4">
+    <div className="panel space-y-3 p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="font-display text-sm font-semibold">Press progress</p>
-        <span className="font-mono text-xs text-fg-muted">
-          {Math.round(progress * (progress <= 1 ? 100 : 1))}%
+        <span className="font-mono text-xs tabular-nums text-fg-muted">
+          {Math.round(pct)}%
         </span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
         <div
           className={cn(
             "h-full rounded-full transition-all duration-500",
-            failed ? "bg-danger" : "bg-brand",
+            failed ? "bg-danger" : running ? "press-bar-active" : "bg-brand",
           )}
-          style={{
-            width: `${Math.min(100, progress <= 1 ? progress * 100 : progress)}%`,
-          }}
+          style={{ width: `${pct}%` }}
         />
       </div>
-      <ol className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+      <ol className="grid grid-cols-4 gap-1.5 sm:grid-cols-8">
         {stages.map((s, i) => {
           const done = idx > i || status === "done";
           const current = idx === i;
@@ -58,10 +58,10 @@ export function PressProgress({
             <li
               key={s.id}
               className={cn(
-                "rounded-[var(--radius-sm)] px-1 py-1.5 text-center font-mono text-[10px]",
+                "rounded-[var(--radius-sm)] px-1 py-1.5 text-center font-mono text-[10px] transition-colors",
                 done && "bg-brand-tint text-brand-dark",
-                current && !done && "bg-brand text-white",
-                !done && !current && "bg-surface-2 text-fg-muted",
+                current && !done && "bg-brand text-white shadow-[0_0_0_1px_color-mix(in_srgb,var(--brand)_40%,transparent)]",
+                !done && !current && "bg-surface-2/80 text-fg-muted",
               )}
             >
               {s.label}

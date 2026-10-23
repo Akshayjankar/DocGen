@@ -82,14 +82,17 @@ function BrandPanel({
   const setBrandGlow = useStudioStore((s) => s.setBrandGlow);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3.5">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-display text-sm font-semibold">Brand & checks</p>
+        <div>
+          <p className="section-eyebrow">Brand desk</p>
+          <p className="font-display text-sm font-semibold">Brand & checks</p>
+        </div>
         {onClose ? (
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-fg-muted hover:bg-surface-2 hover:text-fg lg:hidden"
+            className="rounded-full p-1.5 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg lg:hidden"
             aria-label="Close brand panel"
           >
             <X size={16} />
@@ -98,22 +101,22 @@ function BrandPanel({
       </div>
 
       {/* Downloads first — always visible when panel opens after press */}
-      <div className="rounded-[var(--radius-md)] border-2 border-brand/40 bg-brand-tint/40 p-1">
-        <p className="px-2 pt-2 text-[11px] font-medium uppercase tracking-wider text-brand">
+      <div className="rounded-[var(--radius-md)] border border-brand/35 bg-brand-tint/50 p-1.5 shadow-[inset_0_1px_0_color-mix(in_srgb,#fff_40%,transparent)]">
+        <p className="px-2 pt-1.5 text-[11px] font-medium uppercase tracking-wider text-brand">
           Your files
         </p>
         <ExportBar documentId={documentId} />
       </div>
 
       <ContentSeal preservedPct={preservedPct} mode={mode} />
-      <label className="flex cursor-pointer items-center gap-2 text-xs text-fg-muted">
+      <label className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-sm)] border border-border/70 bg-surface/60 px-2.5 py-2 text-xs text-fg-muted transition-colors hover:border-border hover:text-fg">
         <input
           type="checkbox"
           className="accent-[var(--brand)]"
           checked={brandGlow}
           onChange={(e) => setBrandGlow(e.target.checked)}
         />
-        Ambient brand glow (Studio backdrop)
+        Ambient brand glow
       </label>
       <ThemeEditor />
       <ContrastRing />
@@ -475,12 +478,12 @@ export default function StudioPage() {
       <AmbientGlow enabled={brandGlow} />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
       {/* Slim toolbar */}
-      <header className="mb-3 flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
+      <header className="panel mb-3 flex shrink-0 flex-wrap items-center gap-2 px-3 py-2.5 sm:gap-3">
         <input
           id="doc-title"
           value={meta.title}
           onChange={(e) => setMeta({ title: e.target.value })}
-          className="min-w-[10rem] flex-1 rounded-[var(--radius-md)] border border-border bg-surface px-3 py-2 text-sm font-medium outline-none focus:border-brand sm:max-w-xs"
+          className="min-w-[10rem] flex-1 rounded-[var(--radius-md)] border border-border bg-bg/40 px-3 py-2 text-sm font-medium outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 sm:max-w-xs"
           placeholder="Document title"
           aria-label="Document title"
         />
@@ -511,7 +514,7 @@ export default function StudioPage() {
       </header>
 
       {/* Mobile tabs */}
-      <div className="mb-3 flex shrink-0 gap-1 rounded-[var(--radius-md)] border border-border bg-surface p-1 lg:hidden">
+      <div className="panel mb-3 flex shrink-0 gap-1 p-1 lg:hidden">
         {(
           [
             ["write", "Write"],
@@ -542,7 +545,7 @@ export default function StudioPage() {
           brandOpen ? "lg:grid-cols-[1fr_1fr_20rem]" : "lg:grid-cols-2",
         )}
       >
-        <section className="relative z-10 flex min-h-0 flex-col gap-3 overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-surface/60 p-3">
+        <section className="panel relative z-10 flex min-h-0 flex-col gap-3 overflow-y-auto p-3.5">
           <div className="shrink-0">
             <LogoPair />
           </div>
@@ -552,14 +555,14 @@ export default function StudioPage() {
         </section>
 
         <section className="relative z-10 flex min-h-0 flex-col gap-3 overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface/40 p-3">
+          <div className="panel min-h-0 flex-1 overflow-hidden p-3.5">
             <PaperViewer />
           </div>
           <PressProgress status={status} progress={progress} message={message} />
         </section>
 
         {brandOpen ? (
-          <aside className="relative z-10 min-h-0 overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface/60">
+          <aside className="panel relative z-10 min-h-0 overflow-hidden">
             <BrandPanel {...brandProps} onClose={() => setBrandOpen(false)} />
           </aside>
         ) : null}
@@ -568,7 +571,7 @@ export default function StudioPage() {
       {/* Mobile panes */}
       <div className="min-h-0 flex-1 lg:hidden">
         {mobileTab === "write" ? (
-          <section className="flex h-full min-h-[60vh] flex-col gap-3 overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-surface/60 p-3">
+          <section className="panel flex h-full min-h-[60vh] flex-col gap-3 overflow-y-auto p-3.5">
             <div className="shrink-0">
               <LogoPair />
             </div>
@@ -579,14 +582,14 @@ export default function StudioPage() {
         ) : null}
         {mobileTab === "paper" ? (
           <section className="flex h-full min-h-[60vh] flex-col gap-3">
-            <div className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface/40 p-3">
+            <div className="panel min-h-0 flex-1 overflow-hidden p-3.5">
               <PaperViewer />
             </div>
             <PressProgress status={status} progress={progress} message={message} />
           </section>
         ) : null}
         {mobileTab === "brand" ? (
-          <aside className="h-full min-h-[60vh] overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface/60">
+          <aside className="panel h-full min-h-[60vh] overflow-hidden">
             <BrandPanel {...brandProps} />
           </aside>
         ) : null}
