@@ -20,9 +20,7 @@ from app.services.theme_engine.logo import read_processed_bytes
 
 
 def _rgb_hex(rgb: tuple[float, float, float]) -> str:
-    return "#{:02X}{:02X}{:02X}".format(
-        int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255)
-    )
+    return f"#{int(rgb[0] * 255):02X}{int(rgb[1] * 255):02X}{int(rgb[2] * 255):02X}"
 
 # A4 defaults from LayoutSpec (overridden per-theme)
 PAGE_W, PAGE_H = pymupdf.paper_size("a4")

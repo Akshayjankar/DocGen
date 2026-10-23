@@ -39,6 +39,7 @@ credentials.json
 /data/
 backend/data/
 backend/tmp/
+backend/tests/quality/_tmp_eval/
 tmp/
 tmp_*/
 *.docx
