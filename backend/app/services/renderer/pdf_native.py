@@ -9,9 +9,20 @@ import pymupdf
 from app.models.blocks import Block
 from app.models.document import DocumentMeta, RenderOptions
 from app.models.theme import LogoSet, Theme
-from app.services.renderer.inline_md import parse_inline, strip_inline_markers
+from app.services.renderer.inline_md import (
+    display_text,
+    parse_inline,
+    runs_to_html,
+    strip_inline_markers,
+)
 from app.services.renderer.layout import LayoutPlan, mm_to_pt, plan_layout
 from app.services.theme_engine.logo import read_processed_bytes
+
+
+def _rgb_hex(rgb: tuple[float, float, float]) -> str:
+    return "#{:02X}{:02X}{:02X}".format(
+        int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255)
+    )
 
 # A4 defaults from LayoutSpec (overridden per-theme)
 PAGE_W, PAGE_H = pymupdf.paper_size("a4")
@@ -26,10 +37,11 @@ CONTENT_TOP = MARGIN_TOP + 8
 CONTENT_BOTTOM = PAGE_H - MARGIN_BOTTOM
 CONTENT_W = PAGE_W - 2 * MARGIN_X
 
-_FONT_REG = "docgen-reg"
-_FONT_BOLD = "docgen-bold"
-_ARIAL = Path("/System/Library/Fonts/Supplemental/Arial.ttf")
-_ARIAL_BOLD = Path("/System/Library/Fonts/Supplemental/Arial Bold.ttf")
+# Built-in Base14 only. Embedding Arial.ttf (and several other Windows TTFs)
+# makes MuPDF map U+002D HYPHEN-MINUS → U+00AD SOFT HYPHEN, which stacks
+# glyphs in Preview/Chrome and looks like "overlapping text".
+_FONT_REG = "helv"
+_FONT_BOLD = "hebo"
 
 
 def _rgb(hex_color: str) -> tuple[float, float, float]:
@@ -95,22 +107,12 @@ class _PdfBuilder:
         self.y = CONTENT_TOP
         self.max_y = CONTENT_BOTTOM - 4
         self.heading_pages: list[tuple[str, int, int]] = []
-        self._font_reg = "helv"
-        self._font_bold = "hebo"
-        self._use_arial = _ARIAL.exists() and _ARIAL_BOLD.exists()
+        self._font_reg = _FONT_REG
+        self._font_bold = _FONT_BOLD
 
     def _ensure_fonts(self, page: pymupdf.Page) -> None:
-        if not self._use_arial:
-            return
-        try:
-            page.insert_font(fontname=_FONT_REG, fontfile=str(_ARIAL))
-            page.insert_font(fontname=_FONT_BOLD, fontfile=str(_ARIAL_BOLD))
-            self._font_reg = _FONT_REG
-            self._font_bold = _FONT_BOLD
-        except Exception:
-            self._use_arial = False
-            self._font_reg = "helv"
-            self._font_bold = "hebo"
+        # Base14 helv/hebo — no embedded TTFs (see module note on soft hyphens).
+        return
 
     def _draw_border(self, page: pymupdf.Page) -> None:
         style = (self.theme.layout.border_style if self.theme.layout else None) or (
@@ -249,15 +251,6 @@ class _PdfBuilder:
         if self.y + need > self.max_y:
             self.new_page()
 
-    def _run_font(self, *, bold: bool = False, italic: bool = False, code: bool = False) -> str:
-        if code:
-            return "cour"
-        if bold:
-            return self._font_bold
-        if italic:
-            return "heit"
-        return self._font_reg
-
     def _textbox(
         self,
         text: str,
@@ -272,12 +265,17 @@ class _PdfBuilder:
         rich: bool = True,
     ) -> float:
         assert self.page is not None
-        if not text.strip():
+        if not (text or "").strip():
             return 0.0
-        # Never emit soft hyphens
-        text = text.replace("\u00ad", "").replace("\u2011", "-")
-        if rich and fontname is None and align == 0:
-            return self._rich_textbox(
+        # Always sanitize — soft hyphens / ** markers cause stacked glyphs & raw MD
+        plain = display_text(text)
+        if not plain.strip():
+            return 0.0
+        styled = any(
+            r.bold or r.italic or r.code or r.strike for r in parse_inline(text)
+        )
+        if rich and fontname is None and align == 0 and styled:
+            return self._html_textbox(
                 text,
                 fontsize=fontsize,
                 color=color,
@@ -286,7 +284,6 @@ class _PdfBuilder:
                 space_after=space_after,
             )
         fontname = fontname or self._font_reg
-        plain = strip_inline_markers(text) if rich else text
         width = (max_width or CONTENT_W) - indent
         est_lines = max(1, int(len(plain) / max(20, width / (fontsize * 0.5))) + 1)
         height = est_lines * (fontsize * 1.45) + fontsize
@@ -309,7 +306,7 @@ class _PdfBuilder:
         self.y += max(used, fontsize + 2) + space_after
         return used
 
-    def _rich_textbox(
+    def _html_textbox(
         self,
         text: str,
         *,
@@ -319,68 +316,36 @@ class _PdfBuilder:
         max_width: float | None = None,
         space_after: float = 6,
     ) -> float:
-        """Word-wrap Markdown inline runs (bold/italic/code); markers omitted."""
+        """Markdown-aware body text via insert_htmlbox (no manual glyph advance)."""
         assert self.page is not None
-        from app.services.renderer.inline_md import InlineRun
-
+        plain = display_text(text)
+        if not plain.strip():
+            return 0.0
         width = (max_width or CONTENT_W) - indent
-        line_h = fontsize * 1.45
-        x0 = MARGIN_X + indent
-        x_max = x0 + width
-        y0 = self.y
-        x = x0
-        drew = False
-
-        def new_line() -> None:
-            nonlocal x
-            self.y += line_h
-            self.ensure(line_h + 2)
-            x = x0
-
-        def tokens_of(s: str) -> list[str]:
-            out: list[str] = []
-            buf = ""
-            for ch in s:
-                if ch == " ":
-                    if buf:
-                        out.append(buf)
-                        buf = ""
-                    out.append(" ")
-                else:
-                    buf += ch
-            if buf:
-                out.append(buf)
-            return out
-
-        self.ensure(line_h + 2)
-        soft_lines = text.replace("\r\n", "\n").split("\n")
-        for li, soft in enumerate(soft_lines):
-            if li > 0:
-                new_line()
-            runs: list[InlineRun] = parse_inline(soft)
-            if not runs and soft == "":
-                continue
-            if not runs:
-                runs = [InlineRun(soft)]
-            for ir in runs:
-                font = self._run_font(bold=ir.bold, italic=ir.italic, code=ir.code)
-                for tok in tokens_of(ir.text):
-                    tw = self._text_width(tok, fontsize=fontsize, bold=ir.bold or ir.code)
-                    if tok != " " and x > x0 and x + tw > x_max:
-                        new_line()
-                    if tok == " " and x <= x0 + 0.01:
-                        continue
-                    self.page.insert_text(
-                        pymupdf.Point(x, self.y + fontsize),
-                        tok,
-                        fontsize=fontsize,
-                        fontname=font,
-                        color=color,
-                    )
-                    x += tw
-                    drew = True
-        used = max(fontsize + 2, (self.y - y0) + (fontsize if drew else 0))
-        self.y = y0 + used + space_after
+        est_lines = max(1, int(len(plain) / max(20, width / (fontsize * 0.5))) + 1)
+        height = est_lines * (fontsize * 1.55) + fontsize + 8
+        self.ensure(min(height, 220) + 2)
+        rect = pymupdf.Rect(
+            MARGIN_X + indent,
+            self.y,
+            MARGIN_X + indent + width,
+            min(self.y + height + 24, self.max_y),
+        )
+        html = runs_to_html(text, fontsize=fontsize, color_hex=_rgb_hex(color))
+        try:
+            rc = self.page.insert_htmlbox(rect, html)
+            unused = rc[0] if isinstance(rc, tuple) else float(rc)
+            used = max(fontsize + 2, rect.height - float(unused))
+        except Exception:
+            unused = self.page.insert_textbox(
+                rect,
+                plain,
+                fontsize=fontsize,
+                fontname=self._font_reg,
+                color=color,
+            )
+            used = rect.height - unused
+        self.y += used + space_after
         return used
 
     def _section_heading(self, text: str, *, size: float = 20, level: int = 1) -> None:
@@ -388,7 +353,7 @@ class _PdfBuilder:
         after = {1: 6, 2: 4, 3: 3}.get(level, 4)
         self.y += before * 0.35
         self.ensure(size + 28)
-        clean = strip_inline_markers(text)
+        clean = display_text(text)
         self._textbox(
             clean,
             fontsize=size,
@@ -410,13 +375,8 @@ class _PdfBuilder:
             self.y += after
 
     def _clean_cell(self, text: str) -> str:
-        return (
-            (text or "")
-            .replace("\u00ad", "")
-            .replace("\u2011", "-")
-            .replace("\u200b", "")
-            .strip()
-        )
+        """Table cells: strip soft hyphens AND markdown markers (**bold**, etc.)."""
+        return display_text(text).strip()
 
     def _text_width(self, text: str, *, fontsize: float, bold: bool = False) -> float:
         """Measure rendered width; fall back to a conservative estimate."""
@@ -666,7 +626,9 @@ class _PdfBuilder:
             )
             y += 40
 
-        date_s = (self.meta.date or "").replace("\u00ad", "").replace("\u2011", "-")
+        from app.services.renderer.dates import format_date
+
+        date_s = display_text(format_date(self.meta.date or "", self.theme.layout))
         page.insert_textbox(
             pymupdf.Rect(MARGIN_X, y, PAGE_W - MARGIN_X, y + 24),
             f"Version {self.meta.version or '1.0'} · {date_s}".strip(" ·"),

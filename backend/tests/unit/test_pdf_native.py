@@ -131,3 +131,40 @@ def test_ensure_pdf_uses_native_by_default(tmp_path: Path) -> None:
     assert opened.page_count >= 1
     assert "Release Notice" in opened[0].get_text().replace("\xa0", " ")
     opened.close()
+
+
+def test_pdf_strips_markdown_and_soft_hyphens(tmp_path: Path) -> None:
+    """Regression: raw ** markers and soft-hyphen glyph stacking must never appear."""
+    from app.models.document import DocType
+    from app.services.ingest.parse import parse_text
+    from app.services.structurer.rules import RulesStructurer
+
+    src = (
+        "# How this works\n\n"
+        "How to read this guide. Thir\u00adty-second story with **bold words**.\n\n"
+        "| **Project name** | **Guide date** |\n"
+        "| --- | --- |\n"
+        "| OpsDash | **restaurant chain HQ** |\n\n"
+        "Offline air-gap\u00adped installation.\n"
+    )
+    norm = parse_text(src)
+    blocks = RulesStructurer().structure(norm, DocType.sop)
+    out = tmp_path / "md.pdf"
+    render_pdf_from_blocks(
+        out_path=out,
+        source_text=norm.text,
+        blocks=blocks,
+        theme=get_preset("neutral"),
+        meta=DocumentMeta(title="OpsDash", classification="INTERNAL"),
+    )
+    doc = pymupdf.open(out)
+    text = "\n".join(page.get_text() for page in doc)
+    doc.close()
+    assert "**" not in text, text
+    # Soft hyphens cause stacked/overlapping glyphs in Preview — must be absent
+    assert "\u00ad" not in text, repr(text)
+    assert "Project name" in text
+    assert "restaurant chain HQ" in text
+    assert "Thirty-second" in text
+    assert "bold words" in text
+    assert "air-gapped" in text

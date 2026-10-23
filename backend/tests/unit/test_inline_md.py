@@ -3,6 +3,7 @@
 from app.models.document import DocType
 from app.services.ingest.parse import parse_text
 from app.services.renderer.inline_md import (
+    display_text,
     is_horizontal_rule,
     parse_inline,
     strip_inline_markers,
@@ -24,7 +25,14 @@ def test_parse_bold_italic_code() -> None:
     assert code.code
 
 
-def test_strip_and_hr() -> None:
+def test_display_strips_table_headers_and_soft_hyphens() -> None:
+    assert display_text("**Project name**") == "Project name"
+    assert display_text("**restaurant chain HQ**") == "restaurant chain HQ"
+    # Soft hyphen must never reach the PDF
+    assert "\u00ad" not in display_text("Thir\u00adty-second")
+    assert display_text("Thir\u00adty-second") == "Thirty-second"
+    assert display_text("air-gap\u00adped") == "air-gapped"
+    assert "~~" not in display_text("~~deprecated~~ path")
     assert strip_inline_markers("**What this folder is**") == "What this folder is"
     assert is_horizontal_rule("---")
     assert is_horizontal_rule("***")
@@ -44,9 +52,9 @@ Works **offline**.
     blocks = RulesStructurer().structure(norm, DocType.sop)
     types = [b.type for b in blocks]
     assert "divider" in types
-    # Markers stay in source spans — content lock still 100%
     result = score(norm.text, blocks, mode="format_only")
     assert result.preserved_pct == 100.0, result.missing
-    # Paragraph resolution still contains markers (presentation strips them)
     paras = [b.resolved_text(norm.text) for b in blocks if b.type == "paragraph"]
     assert any("**" in p for p in paras)
+    # Display path must never show markers
+    assert all("**" not in display_text(p) for p in paras)

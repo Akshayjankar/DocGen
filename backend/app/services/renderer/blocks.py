@@ -9,7 +9,7 @@ from docx.text.paragraph import Paragraph
 
 from app.models.blocks import Block
 from app.models.theme import Theme
-from app.services.renderer.inline_md import parse_inline, strip_inline_markers
+from app.services.renderer.inline_md import display_text, parse_inline, strip_inline_markers
 from app.services.renderer.oxml import (
     add_seq_field,
     hex_to_word,
@@ -147,7 +147,7 @@ def _render_table(doc: Document, block: Block, theme: Theme) -> None:
         if i >= cols:
             break
         cell = table.rows[0].cells[i]
-        cell.text = h
+        cell.text = display_text(h)
         set_cell_shading(cell, p.primary)
         for paragraph in cell.paragraphs:
             for run in paragraph.runs:
@@ -159,13 +159,11 @@ def _render_table(doc: Document, block: Block, theme: Theme) -> None:
     for r_i, row in enumerate(rows):
         for c_i in range(cols):
             cell = table.rows[r_i + 1].cells[c_i]
-            cell.text = row[c_i] if c_i < len(row) else ""
+            raw = row[c_i] if c_i < len(row) else ""
+            cell.paragraphs[0].clear()
+            _add_md_runs(cell.paragraphs[0], raw, theme=theme, color=p.text, size_pt=10)
             if r_i % 2 == 1:
                 set_cell_shading(cell, p.primary_tint)
-            for paragraph in cell.paragraphs:
-                for run in paragraph.runs:
-                    run.font.size = Pt(10)
-                    run.font.name = theme.fonts.body
     doc.add_paragraph()
 
 

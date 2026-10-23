@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any, Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.blocks import Block
 from app.models.theme import Theme
@@ -40,6 +40,8 @@ def _clean_date(value: str) -> str:
 
 
 class DocumentMeta(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+
     title: str = "Untitled Document"
     version: str = "1.0"
     author: str = ""
