@@ -1,0 +1,64 @@
+{
+  "summary": {
+    "n": 6,
+    "content_preservation": 100.0,
+    "wcag_aa_pass_rate": 100.0,
+    "docx_validity": 100.0,
+    "structure_f1": null,
+    "latency_p50_ms": 90.8,
+    "latency_p95_ms": 134.4,
+    "fallback_rate": 100.0,
+    "cost_per_doc": 0.0,
+    "failures": []
+  },
+  "rows": [
+    {
+      "input": "report_quarterly.md",
+      "logo": "logo_0.png",
+      "preserved_pct": 100.0,
+      "aa": true,
+      "valid": true,
+      "latency_ms": 101.9
+    },
+    {
+      "input": "report_quarterly.md",
+      "logo": "logo_1.png",
+      "preserved_pct": 100.0,
+      "aa": true,
+      "valid": true,
+      "latency_ms": 88.7
+    },
+    {
+      "input": "setup_install.md",
+      "logo": "logo_0.png",
+      "preserved_pct": 100.0,
+      "aa": true,
+      "valid": true,
+      "latency_ms": 88.8
+    },
+    {
+      "input": "setup_install.md",
+      "logo": "logo_1.png",
+      "preserved_pct": 100.0,
+      "aa": true,
+      "valid": true,
+      "latency_ms": 90.8
+    },
+    {
+      "input": "sop_password.md",
+      "logo": "logo_0.png",
+      "preserved_pct": 100.0,
+      "aa": true,
+      "valid": true,
+      "latency_ms": 93.1
+    },
+    {
+      "input": "sop_password.md",
+      "logo": "logo_1.png",
+      "preserved_pct": 100.0,
+      "aa": true,
+      "valid": true,
+      "latency_ms": 134.4
+    }
+  ]
+}

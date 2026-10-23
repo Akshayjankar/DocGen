@@ -1,0 +1,23 @@
+id: meeting_minutes
+label: Meeting Minutes
+description: Attendees, decisions, and action items
+layout:
+  cover_style: none
+  front_matter: []
+  revision_history: "off"
+  toc: "off"
+  heading_numbering: none
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: date, right: page_x_of_y}
+  margins: normal
+style: {font_pair: clean, table_style: striped, callout_style: bar}
+sections:
+  - {title: Attendees, required: true, hint: table}
+  - {title: Agenda}
+  - {title: Decisions, hint: callout}
+  - {title: Action items, required: true, hint: table}
+structurer:
+  rules: {numbered_lines_as_steps: false, warn_prefix_as_callout: true, question_lines_as_headings: false}
+  hints: "Action items table: Owner, Due, Status."
+lint: {required_sections: [Attendees, Action items]}
+sample: samples/minutes.md

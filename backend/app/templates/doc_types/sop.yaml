@@ -1,0 +1,10 @@
+name: Standard Operating Procedure
+required_sections:
+  - Purpose
+  - Scope
+  - Roles
+  - Procedure
+  - Records
+cover_defaults:
+  classification: Internal
+auto_blocks: []

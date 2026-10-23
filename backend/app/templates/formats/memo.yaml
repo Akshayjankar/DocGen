@@ -1,0 +1,21 @@
+id: memo
+label: Memo / Notes
+description: Compact memo; question lines become headings
+layout:
+  cover_style: none
+  front_matter: []
+  revision_history: "off"
+  toc: "off"
+  heading_numbering: none
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: none, right: page_x_of_y}
+  margins: narrow
+style: {font_pair: clean, table_style: plain, callout_style: bar}
+sections:
+  - {title: Subject}
+  - {title: Notes}
+structurer:
+  rules: {numbered_lines_as_steps: false, warn_prefix_as_callout: false, question_lines_as_headings: true}
+  hints: "Lines ending with ? that start a block become headings."
+lint: {required_sections: []}
+sample: samples/memo.md

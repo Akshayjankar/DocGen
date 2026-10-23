@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.db
+*.sqlite3
+uv.lock.bak
+
+# Node / frontend
+node_modules/
+.next/
+frontend/dist/
+frontend/out/
+*.tsbuildinfo
+.turbo/
+.pnpm-store/
+
+# Env / secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+.secrets/
+
+# App runtime / outputs
+/out/
+/data/
+backend/data/
+backend/tmp/
+tmp/
+*.docx
+*.pdf
+!docs/**/*.pdf
+!samples/**/*
+!backend/tests/fixtures/**/*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs / misc
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.cache/

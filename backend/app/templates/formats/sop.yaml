@@ -1,0 +1,30 @@
+id: sop
+label: SOP
+description: Standard Operating Procedure
+layout:
+  cover_style: centered
+  front_matter: [release_notice, revision_history, approval_table]
+  revision_history: "page"
+  toc: "auto"
+  toc_depth: 2
+  heading_numbering: decimal
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: doc_id, right: page_x_of_y}
+  margins: normal
+style:
+  font_pair: modern
+  table_style: striped
+  callout_style: bar
+sections:
+  - {title: Purpose, required: true}
+  - {title: Scope, required: true}
+  - {title: Roles and Responsibilities, hint: table}
+  - {title: Definitions}
+  - {title: Procedure, required: true, hint: numbered steps}
+  - {title: Records}
+  - {title: References}
+structurer:
+  rules: {numbered_lines_as_steps: true, warn_prefix_as_callout: true, question_lines_as_headings: false}
+  hints: "Procedures are ordered steps; cautions become warning callouts."
+lint: {required_sections: [Purpose, Scope, Procedure]}
+sample: samples/sop.md

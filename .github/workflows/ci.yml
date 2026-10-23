@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - name: Sync
+        run: uv sync --all-extras
+      - name: Lint
+        run: uv run ruff check app tests
+      - name: Tests
+        run: uv run pytest -q --cov=app --cov-fail-under=60
+      - name: Fast quality harness
+        run: uv run python tests/quality/run_eval.py --fast
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install
+      - run: pnpm test
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm build

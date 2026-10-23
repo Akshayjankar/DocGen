@@ -1,0 +1,25 @@
+id: policy
+label: Policy
+description: Governance policy with legal numbering
+layout:
+  cover_style: centered
+  front_matter: [release_notice, revision_history, approval_table]
+  revision_history: "page"
+  toc: "on"
+  toc_depth: 3
+  heading_numbering: legal
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: none, right: page_x_of_y}
+  margins: normal
+style: {font_pair: classic, table_style: striped, callout_style: bar}
+sections:
+  - {title: Purpose, required: true}
+  - {title: Scope, required: true}
+  - {title: Definitions}
+  - {title: Policy Statements, required: true}
+  - {title: Review Cycle}
+structurer:
+  rules: {numbered_lines_as_steps: false, warn_prefix_as_callout: true, question_lines_as_headings: false}
+  hints: "Shall/must language; definitions table."
+lint: {required_sections: [Purpose, Scope, Policy Statements]}
+sample: samples/policy.md

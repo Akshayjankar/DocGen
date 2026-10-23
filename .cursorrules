@@ -1,0 +1,31 @@
+# Docgen — Project Intelligence
+
+## Mission constant
+`APP_NAME = "Docgen"` — keep the working name in one constant.
+
+## Non-negotiables
+- LLM never controls layout or colors.
+- Format-only: never accept free text from the LLM; resolve spans only.
+- Prefer content fidelity, accessibility (WCAG AA), and determinism when ambiguous.
+- Work phase by phase; do not start next phase until acceptance gates pass.
+- No features outside AGENTS.md until all acceptance criteria pass.
+
+## Architecture reminders
+- Theme Engine → Ingest → Structurer → Renderer → Verifier
+- Rules fallback must work offline (`LLM_PROVIDER=none`)
+- Real OXML: TOC field, PAGE/NUMPAGES, pgBorders, table shading
+
+## Phase status
+Phase 1 (core engine) — complete
+Phases 2–5 — implemented; polish optional
+Revision 2: WP0–WP5 complete
+Revision 3: WP-A–E–C–D implemented (corner fix, hug/margin, formats/*.yaml, ambient glow, Docgen Body + dates)
+PDF: `PDF_ENGINE=native` Jagrook-grade PyMuPDF (cover, TOC leaders, brand tables, header/footer); LibreOffice optional
+
+## Preferences discovered
+- Spec lives in AGENTS.md / CLAUDE.md / .cursor/rules/project.mdc
+- Memory bank under memory-bank/ must stay current
+- Frontend lives in `frontend/`; never put secrets in NEXT_PUBLIC_* except API URL
+- Design: Paper #F6F2EA / Darkroom #0B0B12; no purple-on-white; CSS vars/@theme only
+- Prefer native PDF over LibreOffice dependency
+

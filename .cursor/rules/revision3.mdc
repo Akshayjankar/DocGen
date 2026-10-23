@@ -1,0 +1,22 @@
+---
+description: Docgen Revision 3 — corner logo fix, hug/margin geometry, format presets, ambient glow, body/dates
+globs:
+alwaysApply: false
+---
+
+# Docgen Revision 3
+
+Delta on Revision 2. Order: root-cause → WP-A → WP-B → WP-E → WP-C → WP-D → regression.
+
+## Non-negotiables
+- Corner header logo NEVER falls back to cover unless `same_for_both`
+- FormData keys: `logo_cover` / `logo_corner` (legacy aliases ok)
+- `same_for_both` defaults false; corner upload clears it
+- Preview cache key includes both logo SHAs + logo settings
+- Format presets in `templates/formats/*.yaml`; sections never injected into exports
+- Soft hyphens in PDF extract are NOT a bug (N7)
+
+## Replaces Rev2
+- `show_corner_on_cover` → `corner_pages`
+- Header geometry → hug 14mm / margin 22mm
+- `doc_types/*.yaml` → `formats/*.yaml`

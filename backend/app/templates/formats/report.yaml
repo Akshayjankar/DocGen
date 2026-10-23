@@ -1,0 +1,24 @@
+id: report
+label: Report
+description: Formal report with executive summary
+layout:
+  cover_style: editorial
+  front_matter: [release_notice, revision_history]
+  revision_history: "page"
+  toc: "on"
+  toc_depth: 2
+  heading_numbering: decimal
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: none, right: page_x_of_y}
+  margins: normal
+style: {font_pair: classic, table_style: striped, callout_style: bar}
+sections:
+  - {title: Executive Summary, required: true}
+  - {title: Findings}
+  - {title: Recommendations}
+  - {title: Appendix}
+structurer:
+  rules: {numbered_lines_as_steps: false, warn_prefix_as_callout: true, question_lines_as_headings: false}
+  hints: "Lead with executive summary."
+lint: {required_sections: [Executive Summary]}
+sample: samples/report.md

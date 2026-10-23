@@ -1,0 +1,265 @@
+@import "tailwindcss";
+
+/* ─── Design tokens (The Chroma Press) ─── */
+:root {
+  --paper: #f6f2ea;
+  --paper-deep: #ebe4d6;
+  --ink: #1a1714;
+  --ink-muted: #5c5348;
+  --rule: #d4c9b8;
+  --darkroom: #0b0b12;
+  --darkroom-lift: #15151f;
+  --darkroom-ink: #f0ebe3;
+  --darkroom-muted: #9a9388;
+  --darkroom-rule: #2a2a36;
+
+  --brand: #1f6f5b;
+  --brand-dark: #154a3d;
+  --brand-tint: #e4f2ed;
+  --brand-secondary: #2c3a36;
+  --brand-accent: #c45c26;
+
+  --danger: #b42318;
+  --warning: #b54708;
+  --success: #067647;
+  --info: #175cd3;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --fg-muted: var(--ink-muted);
+  --surface: #fffdf8;
+  --surface-2: var(--paper-deep);
+  --border: var(--rule);
+  --header-bg: color-mix(in srgb, var(--paper) 88%, transparent);
+
+  --vt-x: 50%;
+  --vt-y: 50%;
+  --vt-r: 0px;
+
+  --amb-1: oklch(0.58 0.1 165);
+  --amb-2: oklch(0.58 0.08 200);
+  --amb-3: oklch(0.6 0.06 250);
+}
+
+[data-theme="dark"] {
+  --bg: var(--darkroom);
+  --fg: var(--darkroom-ink);
+  --fg-muted: var(--darkroom-muted);
+  --surface: var(--darkroom-lift);
+  --surface-2: #1c1c28;
+  --border: var(--darkroom-rule);
+  --header-bg: color-mix(in srgb, var(--darkroom) 88%, transparent);
+  --brand-tint: color-mix(in srgb, var(--brand) 22%, var(--darkroom));
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-paper: var(--paper);
+  --color-darkroom: var(--darkroom);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-info: var(--info);
+
+  --font-display: var(--font-display);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+}
+
+/* ─── Base ─── */
+html {
+  scroll-behavior: smooth;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 35%, transparent);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: path(inset(50%));
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Paper grain + ink atmosphere */
+.paper-atmosphere {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(
+      ellipse 120% 80% at 10% -10%,
+      color-mix(in srgb, var(--brand) 14%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 90% 60% at 90% 0%,
+      color-mix(in srgb, var(--brand-accent) 10%, transparent),
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 40%, transparent),
+      transparent 40%
+    );
+}
+
+@keyframes ambient-glow-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(2%, -1.5%) scale(1.03);
+  }
+  66% {
+    transform: translate(-1.5%, 2%) scale(0.98);
+  }
+}
+
+.animate-ambient-glow-drift {
+  animation: ambient-glow-drift 70s ease-in-out infinite;
+}
+
+[data-theme="dark"] .paper-atmosphere {
+  background-image:
+    radial-gradient(
+      ellipse 100% 70% at 20% -20%,
+      color-mix(in srgb, var(--brand) 28%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 80% 50% at 100% 10%,
+      color-mix(in srgb, var(--brand-accent) 16%, transparent),
+      transparent 45%
+    );
+}
+
+/* Display type helpers */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-serif {
+  font-family: var(--font-serif);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Circular view transition (theme toggle) */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 9999;
+    animation: vt-circle 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes vt-circle {
+    from {
+      clip-path: circle(0px at var(--vt-x) var(--vt-y));
+    }
+    to {
+      clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y));
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
+/* Custom scrollbar */
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--fg-muted) 35%, transparent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+}

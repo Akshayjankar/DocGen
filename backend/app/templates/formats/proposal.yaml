@@ -1,0 +1,23 @@
+id: proposal
+label: Proposal
+description: Client proposal with pricing and timeline
+layout:
+  cover_style: editorial
+  front_matter: []
+  revision_history: "off"
+  toc: "on"
+  heading_numbering: none
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: none, right: page_x_of_y}
+  margins: normal
+style: {font_pair: editorial, table_style: striped, callout_style: bar}
+sections:
+  - {title: Overview, required: true}
+  - {title: Timeline, hint: table}
+  - {title: Pricing, hint: table}
+  - {title: Acceptance}
+structurer:
+  rules: {numbered_lines_as_steps: false, warn_prefix_as_callout: false, question_lines_as_headings: false}
+  hints: "Include Prepared for / by and acceptance block."
+lint: {required_sections: [Overview]}
+sample: samples/proposal.md

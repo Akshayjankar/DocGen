@@ -1,0 +1,18 @@
+---
+description: Docgen project rules — phase-gated build from AGENTS.md
+globs:
+alwaysApply: true
+---
+
+# Docgen
+
+- `APP_NAME = "Docgen"` in `backend/app/__init__.py`
+- Read `AGENTS.md` and `memory-bank/*` before substantive work
+- Work phase by phase; do not start Phase N+1 until Phase N gates pass
+- LLM never controls layout/colors; Format-only never accepts free LLM text
+- Prefer content fidelity, WCAG AA, determinism
+- No features outside AGENTS.md until acceptance criteria pass
+
+## Current phase
+
+Phases 1–5 + Revision 2 + Revision 3 complete. See `docs/revision3-rootcause.md` and `.cursor/rules/revision3.mdc`.

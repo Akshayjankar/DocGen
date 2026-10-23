@@ -1,0 +1,9 @@
+name: Setup Guide
+required_sections:
+  - Prerequisites
+  - Installation
+  - Configuration
+  - Verification
+cover_defaults:
+  classification: Internal
+auto_blocks: []

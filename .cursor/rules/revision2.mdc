@@ -1,0 +1,23 @@
+---
+description: Docgen Revision 2 — dual logos, renderer restyle, live paper parity, local Library; remove Evals/Developers
+globs:
+alwaysApply: false
+---
+
+# Revision 2 (delta — do not rebuild from scratch)
+
+Full prompt lives in the chat / `docs/revision2-audit.md` (audit first).
+
+## Order
+WP0 removal → WP1 logos → WP2 renderer/layout → WP3 live preview → WP4 Library → WP5 polish.
+
+## Non-negotiables (unchanged)
+- LLM never controls layout/colors/logos
+- Format-only = 100% content lock
+- Preview and export share one PreviewSession (never restructure at export)
+
+## Supersedes original
+Single `logo_path`; `LivePaperPreview`; `/evals` + `/developers`; API keys / public evals; session Library; original cover/revision/TOC/header-footer rules.
+
+## Audit
+Read `docs/revision2-audit.md` before coding. Do not start WP1 until WP0 gate passes.

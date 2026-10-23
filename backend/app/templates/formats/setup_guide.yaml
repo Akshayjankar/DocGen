@@ -1,0 +1,25 @@
+id: setup_guide
+label: Setup Guide
+description: Installation and configuration guide
+layout:
+  cover_style: centered
+  front_matter: [release_notice, revision_history]
+  revision_history: "page"
+  toc: "on"
+  toc_depth: 2
+  heading_numbering: none
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: none, right: page_x_of_y}
+  margins: normal
+style: {font_pair: technical, table_style: striped, callout_style: bar}
+sections:
+  - {title: Prerequisites, required: true, hint: info callout}
+  - {title: Install, required: true, hint: terminal}
+  - {title: Configure}
+  - {title: Verify}
+  - {title: Troubleshooting, hint: table}
+structurer:
+  rules: {numbered_lines_as_steps: true, warn_prefix_as_callout: true, question_lines_as_headings: false}
+  hints: "Install commands become TERMINAL code boxes."
+lint: {required_sections: [Prerequisites, Install]}
+sample: samples/setup_guide.md

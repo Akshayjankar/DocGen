@@ -1,0 +1,23 @@
+id: release_notes
+label: Release Notes
+description: Version changelog
+layout:
+  cover_style: minimal
+  front_matter: []
+  revision_history: "off"
+  toc: "off"
+  heading_numbering: none
+  header: {logo: corner, classification: true}
+  footer: {left: title, center: none, right: page_x_of_y}
+  margins: normal
+style: {font_pair: modern, table_style: plain, callout_style: bar}
+sections:
+  - {title: New}
+  - {title: Improved}
+  - {title: Fixed}
+  - {title: Known issues}
+structurer:
+  rules: {numbered_lines_as_steps: false, warn_prefix_as_callout: false, question_lines_as_headings: false}
+  hints: "Group by New / Improved / Fixed."
+lint: {required_sections: []}
+sample: samples/release_notes.md

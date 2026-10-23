@@ -1,0 +1,8 @@
+name: Report
+required_sections:
+  - Executive Summary
+  - Findings
+  - Recommendations
+cover_defaults:
+  classification: Internal
+auto_blocks: []
