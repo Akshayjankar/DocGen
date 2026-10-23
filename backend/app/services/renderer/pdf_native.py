@@ -430,12 +430,45 @@ class _PdfBuilder:
         def row_height(cells: list[str], *, header: bool = False) -> float:
             bold = header
             lines = max(cell_lines(cells[i], col_ws[i], bold=bold) for i in range(cols))
-            return max(18.0, lines * (fs + 3.2) + 8)
+            # Bold built-in fonts (hebo) need more vertical room than Arial metrics suggest
+            return max(22.0, lines * (fs * 1.35) + 2 * pad + 6)
 
         header_h = row_height(headers, header=True) if show_header else 0.0
         body_heights = [row_height(r) for r in norm_rows]
         need = header_h + sum(body_heights) + 8
         self.ensure(min(need, 160))
+
+        def _fill_cell(
+            cell: pymupdf.Rect,
+            text: str,
+            *,
+            fontsize: float,
+            fontname: str,
+            color: tuple[float, float, float],
+            align: int = 0,
+        ) -> None:
+            """insert_textbox; if height is too tight (rc < 0), fall back to insert_text."""
+            assert self.page is not None
+            if not text:
+                return
+            box = cell + (pad, 3, -pad, -2)
+            rc = self.page.insert_textbox(
+                box,
+                text,
+                fontsize=fontsize,
+                fontname=fontname,
+                color=color,
+                align=align,
+            )
+            if rc < 0:
+                # Helvetica-Bold often needs a taller box than our estimate — draw baseline text
+                self.page.insert_text(
+                    pymupdf.Point(box.x0, min(box.y0 + fontsize + 1, box.y1 - 1)),
+                    text[:120],
+                    fontsize=fontsize,
+                    fontname=fontname if fontname in ("helv", "hebo") else "helv",
+                    color=color,
+                )
 
         def draw_header_row(y: float) -> float:
             assert self.page is not None
@@ -445,13 +478,12 @@ class _PdfBuilder:
             for i, h in enumerate(headers):
                 cell = pymupdf.Rect(x, y, x + col_ws[i], y + header_h)
                 self.page.draw_rect(cell, color=self.brand, fill=self.brand, width=0.3)
-                self.page.insert_textbox(
-                    cell + (pad, 3, -pad, -2),
+                _fill_cell(
+                    cell,
                     h,
                     fontsize=fs,
                     fontname=self._font_bold,
                     color=(1, 1, 1),
-                    align=0,
                 )
                 x += col_ws[i]
             return y + header_h
@@ -467,16 +499,15 @@ class _PdfBuilder:
             for c, val in enumerate(cells):
                 cell = pymupdf.Rect(x, y, x + col_ws[c], y + rh)
                 self.page.draw_rect(cell, color=self.rule, fill=fill, width=0.35)
-                bold_cell = not show_header and c == 0
-                # Right-align mostly-numeric cells (prices, counts)
+                # Prefer regular weight in cells — bold built-ins overflow short boxes on Linux
                 numeric = bool(val) and all(
                     ch.isdigit() or ch in ",.%$+- " for ch in val
                 )
-                self.page.insert_textbox(
-                    cell + (pad, 3, -pad, -2),
+                _fill_cell(
+                    cell,
                     val,
                     fontsize=fs,
-                    fontname=self._font_bold if bold_cell else self._font_reg,
+                    fontname=self._font_reg,
                     color=self.text,
                     align=2 if numeric else 0,
                 )
@@ -549,17 +580,26 @@ class _PdfBuilder:
         )
         y += 36
 
-        # Release Notice in lower third
+        # Release Notice in lower third (box must fit bold font ascent on Linux/hebo)
         y = max(y, PAGE_H * 0.58)
-        page.insert_textbox(
-            pymupdf.Rect(MARGIN_X, y, PAGE_W - MARGIN_X, y + 22),
+        rn_box = pymupdf.Rect(MARGIN_X, y, PAGE_W - MARGIN_X, y + 28)
+        rn_rc = page.insert_textbox(
+            rn_box,
             "Release Notice",
             fontsize=14,
             fontname=self._font_bold,
             color=self.brand_dark,
             align=1,
         )
-        y += 26
+        if rn_rc < 0:
+            page.insert_text(
+                pymupdf.Point(PAGE_W / 2 - 50, y + 16),
+                "Release Notice",
+                fontsize=14,
+                fontname=self._font_reg,
+                color=self.brand_dark,
+            )
+        y += 32
         self.y = y
         notice_rows = [[k, v] for k, v in self.plan.release_rows]
         self._draw_table(["", ""], notice_rows, col_weights=[0.38, 0.62], show_header=False)
