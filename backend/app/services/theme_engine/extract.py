@@ -6,7 +6,11 @@ import io
 
 import numpy as np
 from PIL import Image
-from sklearn.cluster import KMeans
+
+try:
+    from sklearn.cluster import KMeans
+except ImportError:
+    KMeans = None  # type: ignore[assignment, misc]
 
 from app.models.theme import BorderSpec, Theme
 from app.services.theme_engine.contrast import enforce_palette_aa
@@ -86,15 +90,49 @@ def _filter_pixels(arr: np.ndarray) -> np.ndarray:
     return np.stack(keep)
 
 
+def _kmeans_numpy(
+    data: np.ndarray, k: int, max_iter: int = 20, seed: int = 42
+) -> tuple[np.ndarray, np.ndarray]:
+    """Lightweight pure-numpy KMeans++ without scipy or scikit-learn."""
+    n = len(data)
+    if n <= k:
+        return np.arange(n), np.array(data, copy=True)
+    rng = np.random.default_rng(seed)
+    init_idx = int(rng.integers(0, n))
+    centers = [data[init_idx]]
+    for _ in range(1, k):
+        dist_sq = np.min([np.sum((data - c) ** 2, axis=1) for c in centers], axis=0)
+        total = float(dist_sq.sum())
+        probs = dist_sq / total if total > 0 else np.full(n, 1.0 / n)
+        centers.append(data[rng.choice(n, p=probs)])
+    centers_arr = np.array(centers, dtype=np.float64)
+
+    labels = np.zeros(n, dtype=int)
+    for _ in range(max_iter):
+        dists = np.sum((data[:, np.newaxis, :] - centers_arr[np.newaxis, :, :]) ** 2, axis=2)
+        new_labels = np.argmin(dists, axis=1)
+        if np.array_equal(labels, new_labels):
+            break
+        labels = new_labels
+        for j in range(k):
+            mask = labels == j
+            if np.any(mask):
+                centers_arr[j] = np.mean(data[mask], axis=0)
+    return labels, centers_arr
+
+
 def _cluster_colors(pixels: np.ndarray, k: int = 6) -> list[tuple[str, float, float]]:
     """Return list of (hex, population_weight, chroma) sorted by pop × chroma."""
     labs = np.array([rgb_to_lab((int(p[0]), int(p[1]), int(p[2]))) for p in pixels])
     # Cap k by distinct LAB bins to avoid sklearn ConvergenceWarning.
     lab_bins = np.unique(np.round(labs, 0), axis=0)
     k = max(1, min(k, len(pixels), len(lab_bins)))
-    km = KMeans(n_clusters=k, n_init=10, random_state=42)
-    labels = km.fit_predict(labs)
-    centers = km.cluster_centers_
+    if KMeans is not None:
+        km = KMeans(n_clusters=k, n_init=10, random_state=42)
+        labels = km.fit_predict(labs)
+        centers = km.cluster_centers_
+    else:
+        labels, centers = _kmeans_numpy(labs, k=k)
 
     # Merge clusters with ΔE < 12.
     merged: list[dict[str, float | np.ndarray]] = []
