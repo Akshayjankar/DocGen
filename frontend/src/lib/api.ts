@@ -11,8 +11,33 @@ import type {
   Theme,
 } from "@/types/api";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
+/**
+ * Resolves the API base URL dynamically:
+ * - Server-side (Vercel Serverless Functions / SSR): reads BACKEND_URL injected by Vercel service binding.
+ * - Client-side (Browser):
+ *     1. If NEXT_PUBLIC_API_URL is configured, uses that (e.g. standalone dev server).
+ *     2. Defaults to "" (same-origin relative URL) so requests route to /api/(.*) on Vercel.
+ * - Server-side fallback: NEXT_PUBLIC_API_URL or "http://localhost:8000".
+ */
+export function getApiBase(): string {
+  if (typeof window === "undefined") {
+    if (process.env.BACKEND_URL) {
+      return process.env.BACKEND_URL.replace(/\/$/, "");
+    }
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+    }
+    return "http://localhost:8000";
+  }
+
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+  }
+
+  return "";
+}
+
+export const API_BASE = getApiBase();
 
 export class ApiError extends Error {
   constructor(
@@ -39,8 +64,10 @@ async function request<T>(
   path: string,
   init?: RequestInit & { formData?: FormData },
 ): Promise<T> {
+  const base = getApiBase();
+  const url = path.startsWith("http") ? path : `${base}${path}`;
   const { formData, headers, ...rest } = init ?? {};
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(url, {
     ...rest,
     headers: formData
       ? headers
@@ -127,7 +154,8 @@ export async function createDocument(
 
 /** SSE endpoint URL for job events */
 export function jobEventsUrl(jobId: string): string {
-  return `${API_BASE}/api/v1/jobs/${jobId}/events`;
+  const base = getApiBase();
+  return `${base}/api/v1/jobs/${jobId}/events`;
 }
 
 /** GET /api/v1/documents/{id}/download?format=docx|pdf */
@@ -135,7 +163,8 @@ export function downloadUrl(
   documentId: string,
   format: "docx" | "pdf" = "docx",
 ): string {
-  return `${API_BASE}/api/v1/documents/${documentId}/download?format=${format}`;
+  const base = getApiBase();
+  return `${base}/api/v1/documents/${documentId}/download?format=${format}`;
 }
 
 export async function getJob(jobId: string): Promise<Job> {
@@ -310,7 +339,8 @@ export async function patchPreview(
 
 /** Absolute URL of a rendered page PNG. */
 export function previewPageUrl(id: string, n: number): string {
-  return `${API_BASE}/api/v1/previews/${id}/pages/${n}.png`;
+  const base = getApiBase();
+  return `${base}/api/v1/previews/${id}/pages/${n}.png`;
 }
 
 /** POST /api/v1/previews/{id}/export — returns the file blob + suggested name */
@@ -318,7 +348,8 @@ export async function exportPreview(
   id: string,
   format: "pdf" | "docx" = "pdf",
 ): Promise<{ blob: Blob; filename: string }> {
-  const res = await fetch(`${API_BASE}/api/v1/previews/${id}/export?format=${format}`, {
+  const base = getApiBase();
+  const res = await fetch(`${base}/api/v1/previews/${id}/export?format=${format}`, {
     method: "POST",
   });
   if (!res.ok) {

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app import APP_NAME
@@ -53,6 +55,18 @@ class Settings(BaseSettings):
     watermark_free_tier: bool = True
 
     data_dir: Path = Path("./data")
+
+    @model_validator(mode="after")
+    def adjust_for_vercel(self) -> Settings:
+        if os.getenv("VERCEL"):
+            if self.database_url == "sqlite:///./docgen.db":
+                self.database_url = "sqlite:////tmp/docgen.db"
+            if self.data_dir == Path("./data"):
+                self.data_dir = Path("/tmp/data")
+            vercel_url = os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or os.getenv("VERCEL_URL")
+            if vercel_url and self.frontend_origin == "http://localhost:3000":
+                self.frontend_origin = f"https://{vercel_url}"
+        return self
 
     @property
     def llm_providers(self) -> list[str]:
